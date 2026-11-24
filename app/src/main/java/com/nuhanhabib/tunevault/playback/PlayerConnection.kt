@@ -11,6 +11,7 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.nuhanhabib.tunevault.data.db.TrackEntity
+import com.nuhanhabib.tunevault.ui.components.cleanSongName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -90,6 +91,23 @@ class PlayerConnection(context: Context) {
         }
     }
 
+    /** Plays [track] right after the current song (or now, if nothing is playing). */
+    fun playNext(track: TrackEntity) = withController { c ->
+        if (track.filePath == null) return@withController
+        if (c.mediaItemCount == 0) {
+            c.setMediaItem(track.toMediaItem()); c.prepare(); c.play()
+        } else {
+            c.addMediaItem(c.currentMediaItemIndex + 1, track.toMediaItem())
+        }
+    }
+
+    /** Adds [track] to the end of the queue. */
+    fun addToQueue(track: TrackEntity) = withController { c ->
+        if (track.filePath == null) return@withController
+        c.addMediaItem(track.toMediaItem())
+        if (c.mediaItemCount == 1) { c.prepare(); c.play() }
+    }
+
     fun togglePlay() = withController { if (it.isPlaying) it.pause() else it.play() }
     fun next() = withController { it.seekToNext() }
     fun previous() = withController { it.seekToPrevious() }
@@ -117,14 +135,15 @@ class PlayerConnection(context: Context) {
 
     private fun TrackEntity.toMediaItem(): MediaItem {
         val uri = Uri.fromFile(File(filePath!!))
+        val name = cleanSongName(title, artist)
         return MediaItem.Builder()
             .setMediaId(id)
             .setUri(uri)
             .setRequestMetadata(MediaItem.RequestMetadata.Builder().setMediaUri(uri).build())
             .setMediaMetadata(
                 MediaMetadata.Builder()
-                    .setTitle(title)
-                    .setArtist(artist)
+                    .setTitle(name.title)
+                    .setArtist(name.artist)
                     .setArtworkUri(thumbPath?.let { Uri.fromFile(File(it)) })
                     .setIsPlayable(true)
                     .setIsBrowsable(false)

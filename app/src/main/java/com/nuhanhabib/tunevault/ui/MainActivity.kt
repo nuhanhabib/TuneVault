@@ -20,8 +20,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -43,7 +41,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nuhanhabib.tunevault.data.db.TrackStatus
 import com.nuhanhabib.tunevault.ui.screens.AddScreen
@@ -53,6 +50,7 @@ import com.nuhanhabib.tunevault.ui.screens.MiniPlayer
 import com.nuhanhabib.tunevault.ui.screens.PlayerScreen
 import com.nuhanhabib.tunevault.ui.screens.PlaylistScreen
 import com.nuhanhabib.tunevault.ui.screens.SettingsScreen
+import com.nuhanhabib.tunevault.ui.theme.AppIcons
 import com.nuhanhabib.tunevault.ui.theme.TuneVaultTheme
 
 class MainActivity : ComponentActivity() {
@@ -85,11 +83,19 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Tab(val label: String, val icon: ImageVector) {
-    Library("Library", Icons.Default.LibraryMusic),
-    Add("Add", Icons.Default.Add),
-    Downloads("Downloads", Icons.Default.Download),
-    Settings("Settings", Icons.Default.Settings),
+private enum class Tab(val label: String) {
+    Library("Library"),
+    Add("Add"),
+    Downloads("Downloads"),
+    Settings("Settings");
+
+    val icon: ImageVector
+        get() = when (this) {
+            Library -> AppIcons.LibraryMusic
+            Add -> Icons.Default.Add
+            Downloads -> AppIcons.Download
+            Settings -> Icons.Default.Settings
+        }
 }
 
 @Composable
@@ -163,7 +169,7 @@ private fun App(vm: MainViewModel, sharedText: String?, onShareConsumed: () -> U
                     Tab.Library -> {
                         val id = openPlaylist
                         if (id != null) PlaylistScreen(vm, id, onBack = { openPlaylist = null })
-                        else LibraryScreen(vm, onOpenPlaylist = { openPlaylist = it })
+                        else LibraryScreen(vm, onOpenPlaylist = { openPlaylist = it }, onGoToAdd = { tab = Tab.Add })
                     }
                     Tab.Add -> AddScreen(vm, addInput, onInputChange = { addInput = it })
                     Tab.Downloads -> DownloadsScreen(vm)
@@ -177,11 +183,7 @@ private fun App(vm: MainViewModel, sharedText: String?, onShareConsumed: () -> U
             enter = slideInVertically { it },
             exit = slideOutVertically { it },
         ) {
-            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                Box(Modifier.fillMaxSize().padding(top = 24.dp)) {
-                    PlayerScreen(vm.player, onCollapse = { playerOpen = false })
-                }
-            }
+            PlayerScreen(vm, onCollapse = { playerOpen = false })
         }
     }
 }

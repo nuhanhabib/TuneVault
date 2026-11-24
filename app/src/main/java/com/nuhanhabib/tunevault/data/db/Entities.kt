@@ -1,5 +1,6 @@
 package com.nuhanhabib.tunevault.data.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
@@ -27,7 +28,10 @@ data class TrackEntity(
     val addedAt: Long = System.currentTimeMillis(),
 )
 
-/** A playlist imported from YouTube. [id] is the YouTube playlist id. */
+/**
+ * A playlist. Imported ones use the YouTube playlist id, playlists made in the app
+ * have [isLocal] set and an id starting with "local-".
+ */
 @Entity(tableName = "playlists")
 data class PlaylistEntity(
     @PrimaryKey val id: String,
@@ -35,6 +39,7 @@ data class PlaylistEntity(
     val sourceUrl: String,
     val remoteThumbnail: String?,
     val createdAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(defaultValue = "0") val isLocal: Boolean = false,
 )
 
 @Entity(

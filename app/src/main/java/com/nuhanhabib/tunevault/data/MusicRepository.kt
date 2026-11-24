@@ -11,6 +11,7 @@ import com.nuhanhabib.tunevault.download.DownloadState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.UUID
 
 class MusicRepository(private val context: Context, val dao: MusicDao) {
 
@@ -82,6 +83,27 @@ class MusicRepository(private val context: Context, val dao: MusicDao) {
         )
         return before
     }
+
+    // ---- Playlists made in the app ----
+
+    /** Creates an empty playlist and returns its id. */
+    suspend fun createPlaylist(name: String): String {
+        val id = "local-" + UUID.randomUUID().toString()
+        dao.upsertPlaylist(
+            PlaylistEntity(id = id, title = name.trim(), sourceUrl = "", remoteThumbnail = null, isLocal = true)
+        )
+        return id
+    }
+
+    /** Adds a song to the end of a playlist. Returns false if it was already there. */
+    suspend fun addToPlaylist(playlistId: String, trackId: String): Boolean {
+        val position = (dao.maxPosition(playlistId) ?: -1) + 1
+        return dao.insertRef(PlaylistTrackRef(playlistId, trackId, position)) != -1L
+    }
+
+    suspend fun removeFromPlaylist(playlistId: String, trackId: String) = dao.deleteRef(playlistId, trackId)
+
+    suspend fun renamePlaylist(playlistId: String, name: String) = dao.renamePlaylist(playlistId, name.trim())
 
     fun startDownloads() = DownloadService.start(context)
 

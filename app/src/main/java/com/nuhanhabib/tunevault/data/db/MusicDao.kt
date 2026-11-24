@@ -97,6 +97,24 @@ interface MusicDao {
     )
     fun observePlaylistTracks(playlistId: String): Flow<List<TrackEntity>>
 
+    @Query("SELECT * FROM playlists WHERE isLocal = 1 ORDER BY createdAt DESC")
+    fun observeLocalPlaylists(): Flow<List<PlaylistEntity>>
+
+    @Query("SELECT playlistId FROM playlist_tracks WHERE trackId = :trackId")
+    fun observePlaylistIdsWith(trackId: String): Flow<List<String>>
+
+    @Query("SELECT MAX(position) FROM playlist_tracks WHERE playlistId = :playlistId")
+    suspend fun maxPosition(playlistId: String): Int?
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRef(ref: PlaylistTrackRef): Long
+
+    @Query("DELETE FROM playlist_tracks WHERE playlistId = :playlistId AND trackId = :trackId")
+    suspend fun deleteRef(playlistId: String, trackId: String)
+
+    @Query("UPDATE playlists SET title = :title WHERE id = :id")
+    suspend fun renamePlaylist(id: String, title: String)
+
     @Upsert
     suspend fun upsertPlaylist(playlist: PlaylistEntity)
 

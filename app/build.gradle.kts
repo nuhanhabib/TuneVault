@@ -22,8 +22,8 @@ android {
         applicationId = "com.nuhanhabib.tunevault"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         ndk {
             // Modern phones (Samsung A55 included) are 64-bit ARM.
@@ -44,8 +44,10 @@ android {
 
     buildTypes {
         release {
-            // yt-dlp runs through an embedded Python runtime, keep code shrinking off.
-            isMinifyEnabled = false
+            // Removes unused code so the installed app stays small.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }

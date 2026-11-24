@@ -8,7 +8,10 @@ A personal Android music player that saves songs and playlists from YouTube as *
 - Search for songs inside the app
 - Share a link from the YouTube app → **TuneVault** to save it straight away
 - Saves only the audio stream (no video), in the background, with a progress notification
-- Offline library with songs and playlists, filtering, shuffle and repeat
+- Offline library with songs and playlists, search, shuffle and repeat
+- Create your own playlists: add songs from any song's menu, the player, or a song picker; rename and delete them
+- Play next and add to queue
+- Clean song names: "Artist - Song (Official Video)" is shown as "Song" by "Artist"
 - Background playback with lock-screen and notification controls
 - Pauses automatically when headphones are unplugged
 - Sync a playlist to pick up songs added on YouTube later
@@ -54,7 +57,7 @@ Or build an APK from the command line:
 ./gradlew assembleDebug
 ```
 
-The APK is created at `app/build/outputs/apk/debug/app-debug.apk`. Copy it to the phone and open it to install. You'll need to allow "Install unknown apps".
+The APK is created at `app/build/outputs/apk/debug/app-debug.apk`. For a smaller APK (about 20 MB), build `./gradlew assembleRelease` instead. Copy it to the phone and open it to install. You'll need to allow "Install unknown apps".
 
 The build only includes `arm64-v8a`, which covers almost every modern phone. To support other devices, add more ABIs in `app/build.gradle.kts`.
 

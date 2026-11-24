@@ -31,6 +31,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val queue = dao.observeQueue().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val knownIds = dao.observeAllIds().map { it.toSet() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+    val localPlaylists = dao.observeLocalPlaylists().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val activeDownload = DownloadState.current
 
     private val _busy = MutableStateFlow(false)
@@ -75,6 +76,51 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun deleteTrack(track: TrackEntity) = viewModelScope.launch {
         player.removeFromQueue(track.id)
         repo.deleteTrack(track.id)
+    }
+
+    fun playNext(track: TrackEntity) = viewModelScope.launch {
+        player.playNext(track)
+        _messages.send("Playing next")
+    }
+
+    fun addToQueue(track: TrackEntity) = viewModelScope.launch {
+        player.addToQueue(track)
+        _messages.send("Added to queue")
+    }
+
+    // ---- Your own playlists ----
+
+    fun playlistIdsWith(trackId: String): Flow<List<String>> = dao.observePlaylistIdsWith(trackId)
+
+    /** Creates a playlist, optionally starting it with [firstTrack]. */
+    fun createPlaylist(name: String, firstTrack: TrackEntity? = null) = viewModelScope.launch {
+        if (name.isBlank()) return@launch
+        val id = repo.createPlaylist(name)
+        if (firstTrack != null) {
+            repo.addToPlaylist(id, firstTrack.id)
+            _messages.send("Added to \"${name.trim()}\"")
+        } else {
+            _messages.send("Playlist \"${name.trim()}\" created")
+        }
+    }
+
+    fun toggleInPlaylist(playlist: PlaylistEntity, track: TrackEntity, isIn: Boolean, notify: Boolean = true) =
+        viewModelScope.launch {
+            if (isIn) {
+                repo.removeFromPlaylist(playlist.id, track.id)
+                if (notify) _messages.send("Removed from \"${playlist.title}\"")
+            } else {
+                repo.addToPlaylist(playlist.id, track.id)
+                if (notify) _messages.send("Added to \"${playlist.title}\"")
+            }
+        }
+
+    fun removeFromPlaylist(playlistId: String, track: TrackEntity) = viewModelScope.launch {
+        repo.removeFromPlaylist(playlistId, track.id)
+    }
+
+    fun renamePlaylist(id: String, name: String) = viewModelScope.launch {
+        if (name.isNotBlank()) repo.renamePlaylist(id, name)
     }
 
     fun deletePlaylist(id: String, withSongs: Boolean) = viewModelScope.launch {
